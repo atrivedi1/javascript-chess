@@ -169,6 +169,8 @@ var initBoard = function(){
     var newRow = document.createElement("tr");
 
     for(var k = 0; k < 8; k++) {
+      //switch color of square only if it's not the first square in a row; otherwise
+      //keep it the same as the last square in the previous row
       if(k !== 0) {
         squareColor = squareColor === "white" ? "black" : "white";
       }
@@ -193,7 +195,7 @@ var initBoard = function(){
       newSquare.setAttribute("id", squareId);
       newRow.append(newSquare);
 
-      //increment squareId counter and switch color
+      //increment squareId
       squareId++;
     }
     chessBoard.append(newRow);
@@ -206,7 +208,7 @@ var initPieces = function(board) {
   console.log("initing pieces")
 
   for(var squareId in board.initialSetup) {
-
+    //build out piece object
     var piece = {
       locationOnBoard: squareId,
       type: board.initialSetup[squareId]['piece'],
@@ -216,6 +218,16 @@ var initPieces = function(board) {
 
     board.squares[squareId]['piece'] = piece;
     board.piecesRemaining[squareId] = piece;
+
+    //display pieces on board
+    var newPieceImageContainer = document.createElement("img");
+    var pieceToRender = piece.id.slice(0,2);
+    newPieceImageContainer.setAttribute("src", './pieces/' + pieceToRender + ".png")
+    newPieceImageContainer.setAttribute("class", "chess_piece");
+    newPieceImageContainer.setAttribute("id", piece.id);
+
+    var squareOnWhichPieceIsToBePlaced = document.getElementById(squareId);
+    squareOnWhichPieceIsToBePlaced.append(newPieceImageContainer);
   }
 }
 

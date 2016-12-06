@@ -48,6 +48,7 @@ table {
 td {
   width: 80px;
   height: 75px;
+  text-align: center;
 }
 
   .white {
@@ -55,7 +56,7 @@ td {
   }
 
   .black {
-    background-color: #3a2525;
+    background-color: #ff4141;
   }
 
 #reset_button_div {
