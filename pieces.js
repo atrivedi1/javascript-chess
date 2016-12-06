@@ -76,6 +76,7 @@ ChessPieces.prototype.movePieceUpOrDown = function(startSquare, rows, cols, curr
 //SUBCLASSES FOR INDIVIDUAL PIECES
 //Pawn
 var Pawn = function() {
+  ChessPieces.call(this, type, color)
 
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     var validMoves = [];
@@ -161,6 +162,8 @@ Pawn.prototype.constructor = Pawn;
 
 //Rook
 var Rook = function() {
+  ChessPieces.call(this, type, color)
+
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     var validMoves = this.movePieceUpOrDown(startSquare, rows, cols, currPlayer);
     return validMoves;
@@ -172,6 +175,8 @@ Rook.prototype.constructor = Rook;
 
 //Knight
 var Knight = function() {
+  ChessPieces.call(this, type, color)
+
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     var allPossibleMoves = [];
     var validMoves = [];
@@ -231,6 +236,8 @@ Knight.prototype.constructor = Knight;
 
 //Bishop
 var Bishop = function() {
+  ChessPieces.call(this, type, color)
+
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     //leverage chessPieces moveDiagonal functionality to determine all valid moves
     var topLeft = this.movePieceDiagonally(startSquare, startSquare.topLeft, 'topLeft', currPlayer);
@@ -248,6 +255,8 @@ Bishop.prototype.constructor = Bishop;
 
 //Queen
 var Queen = function() {
+  ChessPieces.call(this, type, color)
+
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currentPlayer) {
     //leverage chessPieces moveDiagonal functionality to determine all valid diagonal moves
     var topLeft = this.movePieceDiagonally(startSquare, startSquare.topLeft, 'topLeft', currPlayer);
@@ -268,6 +277,8 @@ Queen.prototype.constructor = Queen;
 
 //King
 var King = function() {
+  ChessPieces.call(this, type, color)
+
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     var validMoves = [];
 
