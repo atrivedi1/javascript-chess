@@ -2,6 +2,10 @@ $(function() {
 
 });
 
+//BOARD VARIABLES ETC
+var chessBoard = document.getElementById("chess_board");
+var chessSqaures = chessBoard.children;
+
 //BOARD CONSTRUCTOR WHICH CONTAINS THE "STATE" OF A CHESS BOARD
 var Board = function() {
   this.initialSetup = {
@@ -154,6 +158,7 @@ var initBoard = function(){
   //what move they'd like to make based on a standard chess x & y axis
   var columnNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
   var squareId = 0;
+  var squareColor = "white";
 
   for(var i = 0; i < 8; i++) {
     board.rows[i] = [];
@@ -161,8 +166,14 @@ var initBoard = function(){
   }
 
   for(var j = 0; j < 8; j++) {
-    for(var k = 0; k < 8; k++) {
+    var newRow = document.createElement("tr");
 
+    for(var k = 0; k < 8; k++) {
+      if(k !== 0) {
+        squareColor = squareColor === "white" ? "black" : "white";
+      }
+
+      //build out object to represent square
       var square = {
         id: squareId,
         chessId: String(columnNames[k] + (8-j)),
@@ -175,8 +186,17 @@ var initBoard = function(){
       board.squares[squareId] = square;
       board.rows[j][k] = square;
       board.columns[k][j] = square;
+
+       //display square on page
+      var newSquare = document.createElement("td");
+      newSquare.setAttribute("class", squareColor)
+      newSquare.setAttribute("id", squareId);
+      newRow.append(newSquare);
+
+      //increment squareId counter and switch color
       squareId++;
     }
+    chessBoard.append(newRow);
   }
 
   return board;
