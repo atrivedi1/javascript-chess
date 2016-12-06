@@ -2,6 +2,7 @@ $(function() {
 
 });
 
+//BOARD CONSTRUCTOR WHICH CONTAINS THE "STATE" OF A CHESS BOARD
 var Board = function() {
   this.initialSetup = {
     0: { piece: 'Rook', color: 'black', pieceId: 'BR1' },
@@ -45,36 +46,112 @@ var Board = function() {
   this.columns = [];
   this.moveInProgress = false;
   this.movingPiece = null;
-  this.validMoves = null,
-  this.notices = {}
+  this.validMoves = [];
 }
 
-Board.prototype.initiateMove = function() {
+//BOARD METHODS TO HANDLE GENERAL PIECE SELECTION AND MOVEMENT
+//refers to either moving or setting a piece
+Board.prototype.handleMove = function(targetSquareId) {
+  var targetSquare = this.squares[targetSquareId]
+  //if a move is already in progress, then this will amount to setting a piece
+  if(this.moveInProgress) {
+    //check to see if the desired destination square is included in currentValidMoves
+    //if not, cancel move
+    if(targetSquareId in this.validMoves) {
+      var cancelationNotice = "You cannot make this move. Either your piece is incapable of such a maneuver or there's another piece blocking it"
+      return this.cancelMove(cancelationNotice);
+    }
+    //if so, complete the move
+    else { return this.completeMove(targetSquare.id); }
+  }
+  //if a move is not in progress, this will amount to initiating a move
+  else {
+    //if no piece is present in the current square, do nothing
+    if(!targetSquare.piece) { return; }
 
+    //if piece in target cell does not belong to current player color, cancel move
+    if(targetSqaure.piece.color !== this.currentPlayer) {
+      var cancelationNotice = "You cannot move your opponent's piece!";
+      return this.cancelMove(cancelationNotice);
+    }
 
+    var validMoves = this.calculateValidMoves(
+      targetSquare,
+      this.squares,
+      this.rows,
+      this.columns.
+      this.currentPlayer
+    );
+
+    //if there are no valid moves for the selected piece cancel move
+    if(!validMoves.length) {
+      var cancelationNotice = "Unfortunately this piece has nowhere to go!";
+      return this.cancelMove(cancelationNotice);
+    }
+
+    //if there ARE valid moves, change the state of the board to reflect the piece
+    //to be moved
+    else {
+      this.moveInProgress = true;
+      this.movingPiece = targetSqaure.piece;
+      this.validMoves = validMoves;
+    }
+  }
 }
 
-Board.prototype.calculateValidMoves = function() {
-
+Board.prototype.calculateValidMoves = function(targetSqaure, sqaures, rows, columns, currPlayer) {
+  //need to figure out how to wire this up to chess Pieces
 }
 
-Board.prototype.completeMove = function() {
+//used to set piece on board once a valid move is completed
+Board.prototype.completeMove = function(destinationSquareIndex) {
+  //step1: remove piece from old location
+  var oldSqaure = this.squares[this.movingPiece.locationOnBoard]
+  oldSquare.piece = null;
 
+  //step2: delete any pieces from new location if there are any
+  var newSquare = this.squares[destinationSquareIndex];
+
+  if(newSquare.piece) {
+    delete this.pieces[newSquare.piece.id]
+  }
+
+  //step3: move piece to new location
+  newSquare.piece = this.movingPiece;
+  newSquare.piece.locationOnBoard = newSquare.id;
+
+  //step4: udpate state of the board
+  this.moveInProgress = false;
+  this.movingPiece = null;
+  this.validMoves = [];
+  this.switchPlayer();
 }
 
-Board.prototype.deletePiece = function(square, pieceID) {
+Board.prototype.cancelMove = function(notificationString) {
+  this.moveInProgress = false;
+  this.movingPiece = null;
+  this.validMoves = [];
 
-
+  return notification(notificationString);
 }
 
+Board.prototype.deletePiece = function(square, pieceId) {
+  //come back to this!!!
+}
+
+//FUNCTIONALITY TO SWITCH PLAYERS AFTER A MOVE HAS BEEN COMPLETED
 Board.prototype.switchPlayer = function(currPlayer) {
   var newPlayer = currPlayer === "white" ? "black" : "white";
   this.currPlayer = newPlayer;
   return this.currPlayer;
 }
 
+//BOARD SET UP FUNCTIONALITY
 var initBoard = function(){
   var board = new Board();
+
+  //in case I have time to implement an input form that will enable a player to input
+  //what move they'd like to make based on a standard chess x & y axis
   var columnNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
   var squareId = 0;
 
@@ -91,7 +168,8 @@ var initBoard = function(){
         chessId: String(columnNames[k] + (8-j)),
         row: j,
         col: k,
-        piece: null
+        piece: null,
+        diagonals: {}
       }
 
       board.squares[squareId] = square;
@@ -121,10 +199,34 @@ var initPieces = function(board) {
   }
 }
 
+var setDiagonals = function(board) {
+
+  //find all diagonal squares for a given square that are in bounds
+  board.squares.forEach(function(square) {
+    square.diagonals.topLeftPieceId = (board.rows[square.row - 1] && board.columns[square.col - 1]) ?
+      board.rows[square.row - 1][square.col - 1] :
+      null;
+
+    square.diagonals.topRightPieceId = (board.rows[square.row - 1] && board.columns[square.col + 1]) ?
+      board.rows[square.row - 1][square.col +  1] :
+      null;
+
+    square.diagonals.bottomLeftPieceId = (board.rows[square.row + 1] && board.columns[square.col - 1]) ?
+      board.rows[square.row + 1][square.col - 1] :
+      null;
+
+    square.diagonals.bottomRightPieceId = (board.rows[square.row + 1] && board.columns[square.col + 1]) ?
+      board.rows[square.row + 1][square.col + 1] :
+      null;
+  })
+}
+
 var initGame = function() {
   console.log("initing game")
+
   var board = initBoard();
   initPieces(board);
+  setDiagonals(board);
   return board;
 }
 
