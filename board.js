@@ -203,19 +203,19 @@ var setDiagonals = function(board) {
 
   //find all diagonal squares for a given square that are in bounds
   board.squares.forEach(function(square) {
-    square.diagonals.topLeftPieceId = (board.rows[square.row - 1] && board.columns[square.col - 1]) ?
+    square.diagonals.topLeft = (board.rows[square.row - 1] && board.columns[square.col - 1]) ?
       board.rows[square.row - 1][square.col - 1] :
       null;
 
-    square.diagonals.topRightPieceId = (board.rows[square.row - 1] && board.columns[square.col + 1]) ?
+    square.diagonals.topRight = (board.rows[square.row - 1] && board.columns[square.col + 1]) ?
       board.rows[square.row - 1][square.col +  1] :
       null;
 
-    square.diagonals.bottomLeftPieceId = (board.rows[square.row + 1] && board.columns[square.col - 1]) ?
+    square.diagonals.bottomLeft = (board.rows[square.row + 1] && board.columns[square.col - 1]) ?
       board.rows[square.row + 1][square.col - 1] :
       null;
 
-    square.diagonals.bottomRightPieceId = (board.rows[square.row + 1] && board.columns[square.col + 1]) ?
+    square.diagonals.bottomRight = (board.rows[square.row + 1] && board.columns[square.col + 1]) ?
       board.rows[square.row + 1][square.col + 1] :
       null;
   })
