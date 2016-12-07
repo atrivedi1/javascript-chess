@@ -1,3 +1,5 @@
+/*****BOARD NOTIFICATION FUNCTIONALITY *****/
+
 //turn tracker notification
 var turnTrackerDiv = document.getElementById("turn_tracker");
 
@@ -12,6 +14,10 @@ var turnTracker = function(currPlayer) {
 //general notifications
 var notificationDiv = document.getElementById("game_notification");
 
+notificationDiv.onclick = function(event) {
+  notificationDiv.innerText = "";
+};
+
 var notification = function(string) {
   if(string.includes("Game over")) {
     notificationDiv.setAttribute("class", "game_over_notification");
@@ -25,7 +31,3 @@ var notification = function(string) {
 var closeNotification = function() {
   notificationDiv.innerText = "";
 }
-
-notificationDiv.onclick = function(event) {
-  notificationDiv.innerText = "";
-};
