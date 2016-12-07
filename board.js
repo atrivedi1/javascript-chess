@@ -2,9 +2,10 @@ $(function() {
 
 });
 
-//BOARD VARIABLES
+//BOARD DOM VARIABLES
 var chessBoard = document.getElementById("chess_board");
 var chessSqaures = chessBoard.children;
+var resetButton = document.getElementById("reset_button");
 
 //BOARD CONSTRUCTOR WHICH CONTAINS THE "STATE" OF A CHESS BOARD
 var Board = function() {
@@ -61,19 +62,20 @@ var Board = function() {
 //BOARD METHODS TO HANDLE GENERAL PIECE SELECTION AND MOVEMENT
 //refers to either moving or setting a piece
 Board.prototype.handleMove = function(targetSquareId) {
-
+  //if game is over prevent any moves from taking place
   if(this.gameOver) { return; }
+
+  //reset notifications on any move attempt
+  closeNotification();
 
   var targetSquare = this.squares[targetSquareId]
 
-  console.log("targetSquareId --->", targetSquareId)
-  if(targetSquare.piece) { console.log("pieceId -->", targetSquare.piece.id) }
   //if a move is already in progress, then this will amount to setting a piece
   if(this.moveInProgress) {
     //check to see if the desired destination square is included in currentValidMoves
     //if not, cancel move
     if(this.validMoves.indexOf(targetSquareId) === -1) {
-      var cancelationNotice = "You cannot make this move. Either your piece is incapable of such a maneuver or there's another piece blocking it"
+      var cancelationNotice = "You cannot make this move. Either your piece is incapable of such a maneuver or there's another piece blocking it."
       return this.cancelMove(cancelationNotice);
     }
     //if so, complete the move
@@ -151,7 +153,7 @@ Board.prototype.completeMove = function(destinationSquareId) {
     //if piece that is taken is the king, the game is over
     if(type === "King") {
       this.gameOver = true;
-      notification("Game Over. The King is dead!!");
+      notification("Game over. The King is dead!!");
     }
   }
 
@@ -165,6 +167,7 @@ Board.prototype.completeMove = function(destinationSquareId) {
   this.movingPiece = null;
   this.validMoves = [];
   this.switchPlayer(this.currPlayer);
+  turnTracker(this.currPlayer);
   console.log("Squares after move completed -->", this.squares)
 }
 
@@ -332,7 +335,13 @@ var initGame = function() {
   var board = initBoard();
   initPieces(board);
   setDiagonals(board);
+  turnTracker(board.currPlayer);
+
   return board;
+}
+
+resetButton.onclick = function(event) {
+  window.location.reload();
 }
 
 console.log(initGame());
