@@ -4,6 +4,10 @@ var notification = function(string) {
   notificationDiv.innerText = string;
 }
 
-notification.onclick = function(event) {
+var closeNotification = function() {
+  notificationDiv.innerText = "";
+}
+
+notificationDiv.onclick = function(event) {
   notificationDiv.innerText = "";
 };

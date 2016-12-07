@@ -2,7 +2,7 @@ $(function() {
 
 });
 
-//BOARD VARIABLES ETC
+//BOARD VARIABLES
 var chessBoard = document.getElementById("chess_board");
 var chessSqaures = chessBoard.children;
 
@@ -24,7 +24,7 @@ var Board = function() {
     12: { piece: 'Pawn', color: 'black', pieceId: 'BP5' },
     13: { piece: 'Pawn', color: 'black', pieceId: 'BP6' },
     14: { piece: 'Pawn', color: 'black', pieceId: 'BP7' },
-    15: { piece: 'Pawn', color: 'white', pieceId: 'BP8' },
+    15: { piece: 'Pawn', color: 'black', pieceId: 'BP8' },
     48: { piece: 'Pawn', color: 'white', pieceId: 'WP1' },
     49: { piece: 'Pawn', color: 'white', pieceId: 'WP2' },
     50: { piece: 'Pawn', color: 'white', pieceId: 'WP3' },
@@ -43,30 +43,41 @@ var Board = function() {
     63: { piece: 'Rook', color: 'white', pieceId: 'WR2' },
   }
 
-  this.currentPlayer = "white";
-  this.piecesRemaining = {};
+  this.currPlayer = "white";
+  this.piecesRemaining = {
+    "white": { "Pawn": {}, "Rook": {}, "Knight": {}, "Bishop": {}, "Queen": {}, "King": {} },
+    "black": { "Pawn": {}, "Rook": {}, "Knight": {}, "Bishop": {}, "Queen": {}, "King": {} }
+  };
+
   this.squares = [];
   this.rows = [];
   this.columns = [];
   this.moveInProgress = false;
   this.movingPiece = null;
   this.validMoves = [];
+  this.gameOver = false;
 }
 
 //BOARD METHODS TO HANDLE GENERAL PIECE SELECTION AND MOVEMENT
 //refers to either moving or setting a piece
 Board.prototype.handleMove = function(targetSquareId) {
+
+  if(this.gameOver) { return; }
+
   var targetSquare = this.squares[targetSquareId]
+
+  console.log("targetSquareId --->", targetSquareId)
+  if(targetSquare.piece) { console.log("pieceId -->", targetSquare.piece.id) }
   //if a move is already in progress, then this will amount to setting a piece
   if(this.moveInProgress) {
     //check to see if the desired destination square is included in currentValidMoves
     //if not, cancel move
-    if(targetSquareId in this.validMoves) {
+    if(this.validMoves.indexOf(targetSquareId) === -1) {
       var cancelationNotice = "You cannot make this move. Either your piece is incapable of such a maneuver or there's another piece blocking it"
       return this.cancelMove(cancelationNotice);
     }
     //if so, complete the move
-    else { return this.completeMove(targetSquare.id); }
+    else { return this.completeMove(targetSquareId); }
   }
   //if a move is not in progress, this will amount to initiating a move
   else {
@@ -74,18 +85,24 @@ Board.prototype.handleMove = function(targetSquareId) {
     if(!targetSquare.piece) { return; }
 
     //if piece in target cell does not belong to current player color, cancel move
-    if(targetSqaure.piece.color !== this.currentPlayer) {
+    if(targetSquare.piece.color !== this.currPlayer) {
       var cancelationNotice = "You cannot move your opponent's piece!";
       return this.cancelMove(cancelationNotice);
     }
 
-    var validMoves = this.calculateValidMoves(
+    console.log("selected piece -->", targetSquare.piece)
+
+    //otherwise, if piece in target square belongs to current player, determine
+    //all valid moves
+    var validMoves = targetSquare.piece.calculateValidMoves(
       targetSquare,
       this.squares,
       this.rows,
-      this.columns.
-      this.currentPlayer
+      this.columns,
+      this.currPlayer
     );
+
+    console.log("valid moves -->", validMoves)
 
     //if there are no valid moves for the selected piece cancel move
     if(!validMoves.length) {
@@ -96,39 +113,59 @@ Board.prototype.handleMove = function(targetSquareId) {
     //if there ARE valid moves, change the state of the board to reflect the piece
     //to be moved
     else {
+      console.log("correctly trying to initiate move");
       this.moveInProgress = true;
-      this.movingPiece = targetSqaure.piece;
+      this.movingPiece = targetSquare.piece;
       this.validMoves = validMoves;
     }
   }
 }
 
-Board.prototype.calculateValidMoves = function(targetSqaure, sqaures, rows, columns, currPlayer) {
-  //need to figure out how to wire this up to chess Pieces
-}
-
 //used to set piece on board once a valid move is completed
-Board.prototype.completeMove = function(destinationSquareIndex) {
+Board.prototype.completeMove = function(destinationSquareId) {
+  console.log("trying to complete move!!!", destinationSquareId)
   //step1: remove piece from old location
-  var oldSqaure = this.squares[this.movingPiece.locationOnBoard]
+  var oldSquareLocation = this.movingPiece.locationOnBoard;
+  var oldSquare = this.squares[oldSquareLocation]
+  var oldSquareInBrowser = document.getElementById(oldSquareLocation);
+  var pieceInOldSquare = document.getElementById(oldSquare.piece.id);
+
   oldSquare.piece = null;
+  oldSquareInBrowser.childNodes[0].remove();
 
   //step2: delete any pieces from new location if there are any
-  var newSquare = this.squares[destinationSquareIndex];
+  var newSquare = this.squares[destinationSquareId];
+  var newSquareInBrowser = document.getElementById(destinationSquareId);
 
   if(newSquare.piece) {
-    delete this.pieces[newSquare.piece.id]
+    //opponent's piece information
+    var opponent = this.currPlayer === "white" ? "black" : "white";
+    var type = newSquare.piece.type;
+    var id = newSquare.piece.id;
+
+    //delete opponent's piece and remove the corresponding image from the DOM
+    delete this.piecesRemaining[opponent][type][id];
+    console.log("remaining pieces -->", this.piecesRemaining)
+    newSquareInBrowser.childNodes[0].remove();
+
+    //if piece that is taken is the king, the game is over
+    if(type === "King") {
+      this.gameOver = true;
+      notification("Game Over. The King is dead!!");
+    }
   }
 
   //step3: move piece to new location
   newSquare.piece = this.movingPiece;
-  newSquare.piece.locationOnBoard = newSquare.id;
+  newSquare.piece.locationOnBoard = destinationSquareId;
+  newSquareInBrowser.append(pieceInOldSquare);
 
   //step4: udpate state of the board
   this.moveInProgress = false;
   this.movingPiece = null;
   this.validMoves = [];
-  this.switchPlayer();
+  this.switchPlayer(this.currPlayer);
+  console.log("Squares after move completed -->", this.squares)
 }
 
 Board.prototype.cancelMove = function(notificationString) {
@@ -146,6 +183,7 @@ Board.prototype.deletePiece = function(square, pieceId) {
 //FUNCTIONALITY TO SWITCH PLAYERS AFTER A MOVE HAS BEEN COMPLETED
 Board.prototype.switchPlayer = function(currPlayer) {
   var newPlayer = currPlayer === "white" ? "black" : "white";
+  console.log("new player -->", newPlayer)
   this.currPlayer = newPlayer;
   return this.currPlayer;
 }
@@ -193,6 +231,13 @@ var initBoard = function(){
       var newSquare = document.createElement("td");
       newSquare.setAttribute("class", squareColor)
       newSquare.setAttribute("id", squareId);
+
+      //add onclick functionality to each square
+      newSquare.onclick = function(event) {
+        var idOfClickedSquare = Number($(this).attr("id"));
+        board.handleMove(idOfClickedSquare);
+      }
+
       newRow.append(newSquare);
 
       //increment squareId
@@ -208,16 +253,42 @@ var initPieces = function(board) {
   console.log("initing pieces")
 
   for(var squareId in board.initialSetup) {
-    //build out piece object
-    var piece = {
-      locationOnBoard: squareId,
-      type: board.initialSetup[squareId]['piece'],
-      color: board.initialSetup[squareId]['color'],
-      id: board.initialSetup[squareId]['pieceId']
+    //parameters for each piece on board
+    var locationOnBoard = squareId;
+    var type = board.initialSetup[squareId]['piece'];
+    var color =  board.initialSetup[squareId]['color'];
+    var id = board.initialSetup[squareId]['pieceId'];
+    var piece;
+
+    //switch statement to build each piece instance
+    switch(type) {
+      case "Pawn":
+        piece = new Pawn(locationOnBoard, type, color, id);
+        break;
+
+      case "Rook":
+        piece = new Rook(locationOnBoard, type, color, id);
+        break;
+
+      case "Knight":
+        piece = new Knight(locationOnBoard, type, color, id);
+        break;
+
+      case "Bishop":
+        piece = new Bishop(locationOnBoard, type, color, id);
+        break;
+
+      case "Queen":
+        piece = new Queen(locationOnBoard, type, color, id);
+        break;
+
+      case "King":
+        piece = new King(locationOnBoard, type, color, id);
+        break;
     }
 
+    board.piecesRemaining[color][type][id] = piece;
     board.squares[squareId]['piece'] = piece;
-    board.piecesRemaining[squareId] = piece;
 
     //display pieces on board
     var newPieceImageContainer = document.createElement("img");
@@ -229,6 +300,8 @@ var initPieces = function(board) {
     var squareOnWhichPieceIsToBePlaced = document.getElementById(squareId);
     squareOnWhichPieceIsToBePlaced.append(newPieceImageContainer);
   }
+
+  console.log("board after initing pieces -->", board)
 }
 
 var setDiagonals = function(board) {
