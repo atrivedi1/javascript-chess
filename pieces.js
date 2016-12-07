@@ -1,6 +1,7 @@
-//NOTE: ES6 classes probably cleaner/easier to use. Will refactor if I have time
+//TODO: ES6 classes probably cleaner/easier to use. Will refactor if I have time
 
-//PARENT CHESSPIECES CLASS
+/*****PARENT CHESSPIECES CLASS*****/
+
 var ChessPiece = function(locationOnBoard, type, color, id) {
   this.locationOnBoard = locationOnBoard;
   this.type = type;
@@ -8,13 +9,16 @@ var ChessPiece = function(locationOnBoard, type, color, id) {
   this.id = id;
 }
 
-ChessPiece.prototype.movePieceDiagonally = function(start, diagonalSquare, direction, currPlayer) {
+//Helper methods for ALL ChessPiece subclasses:
+//check validity all valid diagonal moves
+ChessPiece.prototype.movePieceDiagonally = function(startSquare, diagonalSquare, direction, currPlayer) {
   var validMoves = [];
 
   var diagonalMoveChecker = function(diagonalSquare, direction) {
-    if(diagonalSquare === null || diagonalSquare === start) { return; }
+    //if there are no valid diagonal square then return out of the function
+    if(diagonalSquare === null || diagonalSquare === startSquare) { return; }
 
-    //if piece exists on diagonal, only valid if the piece belongs to the opponent
+    //if a piece exists on the diagonal, it is only a valid move if the piece belongs to the opponent
     if(diagonalSquare && diagonalSquare.piece) {
       if(diagonalSquare.piece.color !== currPlayer) {
         validMoves.push(diagonalSquare.id)
@@ -34,6 +38,7 @@ ChessPiece.prototype.movePieceDiagonally = function(start, diagonalSquare, direc
   return validMoves;
 }
 
+//check validity of all horizontal and vertical moves
 ChessPiece.prototype.movePieceUpOrDown = function(startSquare, rows, cols, currPlayer) {
   var validMoves = [];
 
@@ -75,8 +80,10 @@ ChessPiece.prototype.movePieceUpOrDown = function(startSquare, rows, cols, currP
   return validMoves;
 }
 
-//SUBCLASSES FOR INDIVIDUAL PIECES
-//Pawn
+/******SUBCLASSES FOR INDIVIDUAL PIECES*****/
+
+//Pawn - valid moves
+//TODO: revisit if there is additional time. Code is not very dry
 var Pawn = function(locationOnBoard, type, color, id) {
   ChessPiece.call(this, locationOnBoard, type, color, id)
 
@@ -103,7 +110,7 @@ var Pawn = function(locationOnBoard, type, color, id) {
         }
       }
 
-      //in call cases, a pawn can attack diagonally
+      //in all cases, a pawn can attack diagonally
       if(startSquare.diagonals.topLeft &&
         startSquare.diagonals.topLeft.piece &&
         startSquare.diagonals.topLeft.piece.color !== currPlayer) {
@@ -121,7 +128,7 @@ var Pawn = function(locationOnBoard, type, color, id) {
 
     //else if pawn is black...
     else {
-      //...and is in start row
+      //...and is in start row, it can move up to two spaces vertically
       if(startSquare.id >= 8 && startSquare.id <= 15){
         if(squares[startSquare.id + 8] && !squares[startSquare.id + 8].piece) {
           validMoves.push(startSquare.id + 8);
@@ -162,7 +169,7 @@ var Pawn = function(locationOnBoard, type, color, id) {
 Pawn.prototype = Object.create(ChessPiece.prototype);
 Pawn.prototype.constructor = Pawn;
 
-//Rook
+//Rook - valid moves
 var Rook = function(locationOnBoard, type, color, id) {
   ChessPiece.call(this, locationOnBoard, type, color, id)
 
@@ -175,7 +182,7 @@ var Rook = function(locationOnBoard, type, color, id) {
 Rook.prototype = Object.create(ChessPiece.prototype);
 Rook.prototype.constructor = Rook;
 
-//Knight
+//Knight - valid moves
 var Knight = function(locationOnBoard, type, color, id) {
   ChessPiece.call(this, locationOnBoard, type, color, id)
 
@@ -184,7 +191,7 @@ var Knight = function(locationOnBoard, type, color, id) {
     var validMoves = [];
 
     //helper function to help determine if moving to a certain square is valid move
-    //TODO: if i have time, will pull this code out as it is used by the knight piece as well
+    //TODO: if i have time, will pull this code out as it is used by the knight piece as well as the king
     var checkIfValidMove = function(squareToCheck) {
       //if there's a piece in square in question only add to valid moves if piece
       //belongs to opponent
@@ -199,6 +206,7 @@ var Knight = function(locationOnBoard, type, color, id) {
       else { validMoves.push(squareToCheck.id); }
     }
 
+    //STEP 1: start by determining ALL moves that the knight COULD make
     //horizontal L up and to the left and right
     if (rows[startSquare.row - 1]) {
       allPossibleMoves.push(rows[startSquare.row - 1][startSquare.col + 2]);
@@ -223,6 +231,8 @@ var Knight = function(locationOnBoard, type, color, id) {
       allPossibleMoves.push(rows[startSquare.row + 2][startSquare.col - 1]);
     }
 
+    //STEP 2: once you have a list of ALL possible moves, loop through all of them
+    //to determine which ones are VALID
     for (var i = 0; i < allPossibleMoves.length; i++) {
       var targetSquare = allPossibleMoves[i];
       //if target squre is in bounds, checkIfValid
@@ -236,13 +246,12 @@ var Knight = function(locationOnBoard, type, color, id) {
 Knight.prototype = Object.create(ChessPiece.prototype);
 Knight.prototype.constructor = Knight;
 
-//Bishop
+//Bishop - valid moves
 var Bishop = function(locationOnBoard, type, color, id) {
   ChessPiece.call(this, locationOnBoard, type, color, id)
 
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     //leverage chessPieces moveDiagonal functionality to determine all valid moves
-
     var topLeft = this.movePieceDiagonally(startSquare, startSquare.diagonals.topLeft, 'topLeft', currPlayer);
     var topRight = this.movePieceDiagonally(startSquare, startSquare.diagonals.topRight, 'topRight', currPlayer);
     var bottomLeft = this.movePieceDiagonally(startSquare, startSquare.diagonals.bottomLeft, 'bottomLeft', currPlayer);
@@ -256,17 +265,17 @@ var Bishop = function(locationOnBoard, type, color, id) {
 Bishop.prototype = Object.create(ChessPiece.prototype);
 Bishop.prototype.constructor = Bishop;
 
-//Queen
+//Queen - valid moves
 var Queen = function(locationOnBoard, type, color, id) {
   ChessPiece.call(this, locationOnBoard, type, color, id)
 
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
-
     //leverage chessPieces moveDiagonal functionality to determine all valid diagonal moves
     var topLeft = this.movePieceDiagonally(startSquare, startSquare.diagonals.topLeft, 'topLeft', currPlayer);
     var topRight = this.movePieceDiagonally(startSquare, startSquare.diagonals.topRight, 'topRight', currPlayer);
     var bottomLeft = this.movePieceDiagonally(startSquare, startSquare.diagonals.bottomLeft, 'bottomLeft', currPlayer);
     var bottomRight = this.movePieceDiagonally(startSquare, startSquare.diagonals.bottomRight, 'bottomRight', currPlayer);
+
     //leverage chessPieces moveUpOrDown functionality to determinal all valid vert and horizontal moves
     var horizontalAndVerticalMoves = this.movePieceUpOrDown(startSquare, rows, cols, currPlayer);
 
@@ -319,8 +328,3 @@ var King = function(locationOnBoard, type, color, id) {
 
 King.prototype = Object.create(ChessPiece.prototype);
 King.prototype.constructor = King;
-
-//All pieces
-var allChessPieceTypes = {
-  Pawn, Rook, Knight, Bishop, Queen, King
-}
