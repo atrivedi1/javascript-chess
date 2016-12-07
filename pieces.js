@@ -1,19 +1,21 @@
 //NOTE: ES6 classes probably cleaner/easier to use. Will refactor if I have time
 
 //PARENT CHESSPIECES CLASS
-var ChessPieces = function(pieceType, color) {
-  this.type = pieceType;
+var ChessPiece = function(locationOnBoard, type, color, id) {
+  this.locationOnBoard = locationOnBoard;
+  this.type = type;
   this.color = color;
+  this.id = id;
 }
 
-ChessPieces.prototype.movePieceDiagonally = function(start, diagonalSquare, direction, currPlayer) {
+ChessPiece.prototype.movePieceDiagonally = function(start, diagonalSquare, direction, currPlayer) {
   var validMoves = [];
 
   var diagonalMoveChecker = function(diagonalSquare, direction) {
     if(diagonalSquare === null || diagonalSquare === start) { return; }
 
     //if piece exists on diagonal, only valid if the piece belongs to the opponent
-    if(diagonalSquare.piece) {
+    if(diagonalSquare && diagonalSquare.piece) {
       if(diagonalSquare.piece.color !== currPlayer) {
         validMoves.push(diagonalSquare.id)
         return;
@@ -24,7 +26,7 @@ ChessPieces.prototype.movePieceDiagonally = function(start, diagonalSquare, dire
     //if no pieces exists on diagonal, add next diagonal sqaure to validMoves and recurse
     else {
       validMoves.push(diagonalSquare.id);
-      diagonalMoveChecker(diagonalSquare[direction], direction)
+      diagonalMoveChecker(diagonalSquare.diagonals[direction], direction)
     }
   }
 
@@ -32,25 +34,25 @@ ChessPieces.prototype.movePieceDiagonally = function(start, diagonalSquare, dire
   return validMoves;
 }
 
-ChessPieces.prototype.movePieceUpOrDown = function(startSquare, rows, cols, currPlayer) {
+ChessPiece.prototype.movePieceUpOrDown = function(startSquare, rows, cols, currPlayer) {
   var validMoves = [];
 
   //all sqaures above, below, to the right, and to the left of current square
   var up = cols[startSquare.col].slice(0, startSquare.row).reverse();
-  var right = rows[startSqaure.row].slice(startSquare.col + 1);
-  var down = cols[startSquare.col].slice(startSqaure.row+1);
-  var left = rows[startSquare.row].slice(0, startSqaure.col).reverse();
+  var right = rows[startSquare.row].slice(startSquare.col + 1);
+  var down = cols[startSquare.col].slice(startSquare.row + 1);
+  var left = rows[startSquare.row].slice(0, startSquare.col).reverse();
 
   //helper function to calculate all valid moves
-  var horizontalAndVerticalMoveChecker = function(sqauresToCheck) {
+  var horizontalAndVerticalMoveChecker = function(squaresToCheck) {
 
-    for(var i = 0; i < sqauresToCheck.length; i++) {
-      var currSqaure = squaresToCheck[i];
+    for(var i = 0; i < squaresToCheck.length; i++) {
+      var currSquare = squaresToCheck[i];
 
       //if current square being checked has opponent's piece on it, add to valid moves
       //otherwise break;
       if(currSquare.piece) {
-        if(currSqaure.piece.color !== currPlayer){
+        if(currSquare.piece.color !== currPlayer){
           validMoves.push(currSquare.id);
           break;
         } else {
@@ -75,8 +77,8 @@ ChessPieces.prototype.movePieceUpOrDown = function(startSquare, rows, cols, curr
 
 //SUBCLASSES FOR INDIVIDUAL PIECES
 //Pawn
-var Pawn = function() {
-  ChessPieces.call(this, type, color)
+var Pawn = function(locationOnBoard, type, color, id) {
+  ChessPiece.call(this, locationOnBoard, type, color, id)
 
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     var validMoves = [];
@@ -96,24 +98,24 @@ var Pawn = function() {
 
       //...if not it can only move one space vertically
       else {
-        if(squares[startSquare.id - 8] && !squares[startSqaure.id - 8].piece) {
+        if(squares[startSquare.id - 8] && !squares[startSquare.id - 8].piece) {
           validMoves.push(startSquare.id - 8);
         }
       }
 
       //in call cases, a pawn can attack diagonally
-      if(startSqaure.diagonals.topLeft &&
+      if(startSquare.diagonals.topLeft &&
         startSquare.diagonals.topLeft.piece &&
         startSquare.diagonals.topLeft.piece.color !== currPlayer) {
 
-        validMoves.push(start.topLeft.id)
+        validMoves.push(startSquare.diagonals.topLeft.id)
       }
 
-      if(startSqaure.diagonals.topRight &&
+      if(startSquare.diagonals.topRight &&
         startSquare.diagonals.topRight.piece &&
         startSquare.diagonals.topRight.piece.color !== currPlayer) {
 
-        validMoves.push(start.topRight.id)
+        validMoves.push(startSquare.diagonals.topRight.id)
       }
     }
 
@@ -132,24 +134,24 @@ var Pawn = function() {
 
       //...if not it can only move one space vertically
       else {
-        if(squares[startSquare.id + 8] && !squares[startSqaure.id + 8].piece) {
+        if(squares[startSquare.id + 8] && !squares[startSquare.id + 8].piece) {
           validMoves.push(startSquare.id + 8);
         }
       }
 
       //in call cases, a pawn can attack diagonally
-      if(startSqaure.diagonals.bottomLeft &&
+      if(startSquare.diagonals.bottomLeft &&
         startSquare.diagonals.bottomLeft.piece &&
         startSquare.diagonals.bottomLeft.piece.color !== currPlayer) {
 
-        validMoves.push(start.bottomLeft.id)
+        validMoves.push(startSquare.diagonals.bottomLeft.id)
       }
 
-      if(startSqaure.diagonals.bottomRight &&
+      if(startSquare.diagonals.bottomRight &&
         startSquare.diagonals.bottomRight.piece &&
         startSquare.diagonals.bottomRight.piece.color !== currPlayer) {
 
-        validMoves.push(start.bottoRight.id)
+        validMoves.push(startSquare.diagonals.bottomRight.id)
       }
     }
 
@@ -157,12 +159,12 @@ var Pawn = function() {
   }
 }
 
-Pawn.prototype = Object.create(ChessPieces.prototype);
+Pawn.prototype = Object.create(ChessPiece.prototype);
 Pawn.prototype.constructor = Pawn;
 
 //Rook
-var Rook = function() {
-  ChessPieces.call(this, type, color)
+var Rook = function(locationOnBoard, type, color, id) {
+  ChessPiece.call(this, locationOnBoard, type, color, id)
 
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     var validMoves = this.movePieceUpOrDown(startSquare, rows, cols, currPlayer);
@@ -170,12 +172,12 @@ var Rook = function() {
   }
 }
 
-Rook.prototype = Object.create(ChessPieces.prototype);
+Rook.prototype = Object.create(ChessPiece.prototype);
 Rook.prototype.constructor = Rook;
 
 //Knight
-var Knight = function() {
-  ChessPieces.call(this, type, color)
+var Knight = function(locationOnBoard, type, color, id) {
+  ChessPiece.call(this, locationOnBoard, type, color, id)
 
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     var allPossibleMoves = [];
@@ -231,40 +233,42 @@ var Knight = function() {
   }
 }
 
-Knight.prototype = Object.create(ChessPieces.prototype);
+Knight.prototype = Object.create(ChessPiece.prototype);
 Knight.prototype.constructor = Knight;
 
 //Bishop
-var Bishop = function() {
-  ChessPieces.call(this, type, color)
+var Bishop = function(locationOnBoard, type, color, id) {
+  ChessPiece.call(this, locationOnBoard, type, color, id)
 
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     //leverage chessPieces moveDiagonal functionality to determine all valid moves
-    var topLeft = this.movePieceDiagonally(startSquare, startSquare.topLeft, 'topLeft', currPlayer);
-    var topRight = this.movePieceDiagonally(startSquare, startSquare.topRight, 'topRight', currPlayer);
-    var bottomLeft = this.movePieceDiagonally(startSquare, startSquare.bottomLeft, 'bottomLeft', currPlayer);
-    var bottomRight = this.movePieceDiagonally(startSquare, startSquare.bottomRight, 'bottomRight', currPlayer);
+
+    var topLeft = this.movePieceDiagonally(startSquare, startSquare.diagonals.topLeft, 'topLeft', currPlayer);
+    var topRight = this.movePieceDiagonally(startSquare, startSquare.diagonals.topRight, 'topRight', currPlayer);
+    var bottomLeft = this.movePieceDiagonally(startSquare, startSquare.diagonals.bottomLeft, 'bottomLeft', currPlayer);
+    var bottomRight = this.movePieceDiagonally(startSquare, startSquare.diagonals.bottomRight, 'bottomRight', currPlayer);
 
     var validMoves = topLeft.concat(topRight, bottomLeft, bottomRight);
     return validMoves;
   }
 }
 
-Bishop.prototype = Object.create(ChessPieces.prototype);
+Bishop.prototype = Object.create(ChessPiece.prototype);
 Bishop.prototype.constructor = Bishop;
 
 //Queen
-var Queen = function() {
-  ChessPieces.call(this, type, color)
+var Queen = function(locationOnBoard, type, color, id) {
+  ChessPiece.call(this, locationOnBoard, type, color, id)
 
-  this.calculateValidMoves = function(startSquare, squares, rows, cols, currentPlayer) {
+  this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
+
     //leverage chessPieces moveDiagonal functionality to determine all valid diagonal moves
-    var topLeft = this.movePieceDiagonally(startSquare, startSquare.topLeft, 'topLeft', currPlayer);
-    var topRight = this.movePieceDiagonally(startSquare, startSquare.topRight, 'topRight', currPlayer);
-    var bottomLeft = this.movePieceDiagonally(startSquare, startSquare.bottomLeft, 'bottomLeft', currPlayer);
-    var bottomRight = this.movePieceDiagonally(startSquare, startSquare.bottomRight, 'bottomRight', currPlayer);
+    var topLeft = this.movePieceDiagonally(startSquare, startSquare.diagonals.topLeft, 'topLeft', currPlayer);
+    var topRight = this.movePieceDiagonally(startSquare, startSquare.diagonals.topRight, 'topRight', currPlayer);
+    var bottomLeft = this.movePieceDiagonally(startSquare, startSquare.diagonals.bottomLeft, 'bottomLeft', currPlayer);
+    var bottomRight = this.movePieceDiagonally(startSquare, startSquare.diagonals.bottomRight, 'bottomRight', currPlayer);
     //leverage chessPieces moveUpOrDown functionality to determinal all valid vert and horizontal moves
-    var horizontalAndVerticalMoves = this.movePieceUpOrDown(start, rows, cols, currPlayer);
+    var horizontalAndVerticalMoves = this.movePieceUpOrDown(startSquare, rows, cols, currPlayer);
 
     //combine diagonals and horizontal/vertical valid moves and return
     var validMoves = horizontalAndVerticalMoves.concat(topLeft, topRight, bottomLeft, bottomRight);
@@ -272,12 +276,12 @@ var Queen = function() {
   }
 }
 
-Queen.prototype = Object.create(ChessPieces.prototype);
+Queen.prototype = Object.create(ChessPiece.prototype);
 Queen.prototype.constructor = Queen;
 
 //King
-var King = function() {
-  ChessPieces.call(this, type, color)
+var King = function(locationOnBoard, type, color, id) {
+  ChessPiece.call(this, locationOnBoard, type, color, id)
 
   this.calculateValidMoves = function(startSquare, squares, rows, cols, currPlayer) {
     var validMoves = [];
@@ -295,25 +299,25 @@ var King = function() {
         else { return; }
       }
       //if square is blank, add validMoves
-      else { validMoves.push(squareToCheck.index); }
+      else { validMoves.push(squareToCheck.id); }
     }
 
     //because kings can only move one square at a time, have to check all surrounding squares
     //manually vs. using recursive checker
-    if(startSquare.topLeft) { checkIfValidMove(start.topLeft); };
-    if(startSquare.topRight) { checkIfValidMove(start.topRight); };
-    if(startSquare.bottomLeft) { checkIfValidMove(start.bottomLeft); };
-    if(startSquare.topRight) { checkIfValidMove(start.topRight); };
-    if(squares[startSquare.id - 1]) { checkIfValidMove(squares[start - 1]); };
-    if(squares[startSquare.id + 1]) { checkIfValidMove(squares[start + 1]); };
-    if(squares[startSquare.id - 8]) { checkIfValidMove(squares[start - 8]); };
-    if(squares[startSquare.id + 8]) { checkIfValidMove(squares[start + 8]); };
+    if(startSquare.diagonals.topLeft) { checkIfValidMove(startSquare.diagonals.topLeft); };
+    if(startSquare.diagonals.topRight) { checkIfValidMove(startSquare.diagonals.topRight); };
+    if(startSquare.diagonals.bottomLeft) { checkIfValidMove(startSquare.diagonals.bottomLeft); };
+    if(startSquare.diagonals.bottomRight) { checkIfValidMove(startSquare.diagonals.bottomRight); };
+    if(squares[startSquare.id - 1]) { checkIfValidMove(squares[startSquare.id - 1]); };
+    if(squares[startSquare.id + 1]) { checkIfValidMove(squares[startSquare.id + 1]); };
+    if(squares[startSquare.id - 8]) { checkIfValidMove(squares[startSquare.id - 8]); };
+    if(squares[startSquare.id + 8]) { checkIfValidMove(squares[startSquare.id + 8]); };
 
     return validMoves;
   }
 }
 
-King.prototype = Object.create(ChessPieces.prototype);
+King.prototype = Object.create(ChessPiece.prototype);
 King.prototype.constructor = King;
 
 //All pieces
